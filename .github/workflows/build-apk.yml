@@ -20,10 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Caches the Flutter SDK itself — skips ~1-2 min re-download every run.
+      # Was pinned to 3.24.0 (released mid-2024) — too old for current plugin
+      # versions like app_links (pulled in by supabase_flutter for auth
+      # redirects), causing Gradle "unknown property 'flutter'" errors.
+      # Using the 'stable' channel with no fixed version always resolves to
+      # the current latest stable release, which stays compatible.
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
           channel: 'stable'
           cache: true
 
