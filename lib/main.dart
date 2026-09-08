@@ -11,7 +11,7 @@ Future<void> main() async {
 
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,
-    anonKey: AppConfig.supabaseAnonKey,
+    publishableKey: AppConfig.supabaseAnonKey,
     // Sessions persist to local storage by default — this is what makes
     // "already logged in" work correctly on app relaunch via AuthGate.
   );
