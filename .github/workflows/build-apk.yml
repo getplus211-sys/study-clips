@@ -27,6 +27,18 @@ jobs:
           channel: 'stable'
           cache: true
 
+      # Your repo has no `android/` folder committed — this generates one
+      # that matches the Flutter version above, so Gradle is compatible.
+      # Safe to re-run: skipped automatically once `android/` exists.
+      - name: Generate Android platform folder (if missing)
+        run: |
+          if [ ! -d "android" ]; then
+            echo "No android/ folder found — generating one..."
+            flutter create --platforms=android --org com.studyclips .
+          else
+            echo "android/ folder already exists — skipping."
+          fi
+
       # Caches pub packages + Gradle — the biggest time saver. First run
       # after this change will be slow (populating the cache); every run
       # after that reuses it and skips re-downloading/re-compiling deps.
