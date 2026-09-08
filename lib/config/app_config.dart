@@ -1,8 +1,7 @@
-/// All values here are read from --dart-define / --dart-define-from-file
-/// at BUILD TIME. Nothing sensitive is hard-coded in source, so this file
-/// is safe to commit to a public GitHub repo.
+/// Values here can be overridden via --dart-define / --dart-define-from-file
+/// at BUILD TIME. If not overridden, the defaultValue below is used.
 ///
-/// Local run:
+/// Local run (optional, only needed if you want to override the defaults):
 ///   flutter run \
 ///     --dart-define=SUPABASE_URL=https://xxxx.supabase.co \
 ///     --dart-define=SUPABASE_ANON_KEY=eyJ... \
@@ -12,8 +11,15 @@
 /// repo Settings → Secrets and variables → Actions (see
 /// .github/workflows/build-apk.yml).
 class AppConfig {
-  static const supabaseUrl = String.fromEnvironment('https://qzyhivhsmmnkzsldceso.supabase.co');
-  static const supabaseAnonKey = String.fromEnvironment('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6eWhpdmhzbW1ua3pzbGRjZXNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4MDcxNjksImV4cCI6MjEwNDM4MzE2OX0.NEg22Ca6wBI_am_Kn1HbSsMyoSUOd5X3hXB0nHBCs_w');
+  static const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://qzyhivhsmmnkzsldceso.supabase.co',
+  );
+  static const supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6eWhpdmhzbW1ua3pzbGRjZXNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4MDcxNjksImV4cCI6MjEwNDM4MzE2OX0.NEg22Ca6wBI_am_Kn1HbSsMyoSUOd5X3hXB0nHBCs_w',
+  );
   static const razorpayKey = String.fromEnvironment('RAZORPAY_KEY');
 
   /// Supabase Storage bucket for premium content (PDFs, mock-test assets).
