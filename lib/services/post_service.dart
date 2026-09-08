@@ -8,7 +8,7 @@ class PostService {
   final _client = Supabase.instance.client;
 
   Future<List<Map<String, dynamic>>> fetchFeed({String? subjectFilter, int limit = 20}) async {
-    var query = _client.from('posts_with_counts').select('*, users(name, avatar_url, is_verified)');
+    var query = _client.from('posts_with_counts').select('*, users!posts_user_id_fkey(name, avatar_url, is_verified)');
     if (subjectFilter != null && subjectFilter != 'બધા') {
       query = query.eq('subject', subjectFilter);
     }
