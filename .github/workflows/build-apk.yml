@@ -2,34 +2,100 @@ name: Build APK
 
 on:
   workflow_dispatch:
+    inputs:
+      build_mode:
+        description: 'debug (fast, for testing) or release (slow, final build)'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      # Caches the Flutter SDK itself — skips ~1-2 min re-download every run.
+      - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
 
-      - name: Create Android Project
-        run: flutter create --platforms=android .
+      # Caches pub packages + Gradle — the biggest time saver. First run
+      # after this change will be slow (populating the cache); every run
+      # after that reuses it and skips re-downloading/re-compiling deps.
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            **/.dart_tool
+          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
 
-      - name: Flutter Pub Get
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Analyze
+        run: flutter analyze
 
-      - name: Upload APK
+      # Values below must be added under
+      # Repo → Settings → Secrets and variables → Actions → New repository secret.
+      # NEVER put the actual URL/keys directly in this file.
+      - name: Build APK (debug — fast, for day-to-day testing)
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_mode == 'debug' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          RAZORPAY_KEY: ${{ secrets.RAZORPAY_KEY }}
+        run: |
+          flutter build apk --debug \
+            --target-platform android-arm64 \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --dart-define=RAZORPAY_KEY=$RAZORPAY_KEY
+
+      # Only runs when you explicitly pick "release" from the Actions tab —
+      # use this for the final build you actually share/install for real,
+      # since release does extra minification/shrinking that takes longer.
+      - name: Build APK (release — slower, final build only)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_mode == 'release' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          RAZORPAY_KEY: ${{ secrets.RAZORPAY_KEY }}
+        run: |
+          flutter build apk --release \
+            --target-platform android-arm64 \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --dart-define=RAZORPAY_KEY=$RAZORPAY_KEY
+
+      - name: Upload debug APK
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_mode == 'debug' }}
         uses: actions/upload-artifact@v4
         with:
-          name: study-clips-apk
+          name: study-clips-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+
+      - name: Upload release APK
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_mode == 'release' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: study-clips-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
