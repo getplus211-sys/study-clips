@@ -7,6 +7,7 @@ import '../widgets/async_state_view.dart';
 import '../services/post_service.dart';
 import '../utils/constants.dart';
 import 'profile_screen.dart';
+import 'create_post_screen.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -115,6 +116,19 @@ class _FeedScreenState extends State<FeedScreen> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.ink,
+        onPressed: () async {
+          final posted = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
+          );
+          if (posted == true) {
+            _reload(subject: _chips[_chipIndex]);
+          }
+        },
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
