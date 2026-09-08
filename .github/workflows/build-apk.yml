@@ -30,11 +30,14 @@ jobs:
       # Your repo has no `android/` folder committed — this generates one
       # that matches the Flutter version above, so Gradle is compatible.
       # Safe to re-run: skipped automatically once `android/` exists.
+      # --project-name is explicit because the repo folder is named
+      # "study-clips" (hyphen), which isn't a valid Dart package name —
+      # must match the "name:" field in pubspec.yaml (study_clips).
       - name: Generate Android platform folder (if missing)
         run: |
           if [ ! -d "android" ]; then
             echo "No android/ folder found — generating one..."
-            flutter create --platforms=android --org com.studyclips .
+            flutter create --platforms=android --project-name study_clips --org com.studyclips .
           else
             echo "android/ folder already exists — skipping."
           fi
